@@ -15,19 +15,16 @@ _Note - doesn't just have to be just scrapers, any pass/fail tests that can be f
 
 This bucket will be used as the data source for the dashboard (see other repo).
 
-<br>
 
 # Adding a new family
 
 Add a new family repo we want to monitor to `families` in `config.yaml`, it'll get picked up on the next run.
 
-<br>
 
 ## Required Environment Variables
 
 You'll need to set three environment variables to make this work.
 
-<br>
 
 | Name    | What is this?  |  Why?  |
 |---------|----------------|--------|
@@ -35,8 +32,6 @@ You'll need to set three environment variables to make this work.
 | GOOGLE_APPLICATION_CREDENTIALS | Path to a .json with your google cloud credentials in. | So you can read/write to the bucket. |
 | REPORT_BUCKET_NAME | The bucket to read/write from/to | So you can develop without mangling existing report history |
 
-<br>
-<br>
 
 ## Usage 
 
