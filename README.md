@@ -13,7 +13,7 @@ _Note - doesn't just have to be just scrapers, any pass/fail tests that can be f
 - The previous report/results data (from the bucket: see step 1) is updated to maintain history.
 - The now updated report/results are uploaded back to the bucket.
 
-This bucket will be used as the data source for the dashboard (see other repo).
+This bucket will be used as the data source for the dashboard (see: https://github.com/GSS-Cogs/idp-test-report-dashboard).
 
 
 # Adding a new family
