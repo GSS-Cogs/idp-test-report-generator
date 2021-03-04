@@ -1,5 +1,8 @@
 pipeline {
     agent { docker { image 'gsscogs/allure-test-generator:latest' } }
+    environment {
+        REPORT_BUCKET_NAME = "idp-test-report-store"
+    }
     stages {
         stage('check dependencies') {
             steps {
