@@ -5,7 +5,7 @@ pipeline {
             steps {
                 sh 'pip freeze'
             }
-        },
+        }
         stage('pull data from bucket') {
             steps {
                 sh 'python3 ./download_from_bucket.py'
