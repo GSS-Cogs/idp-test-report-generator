@@ -1,5 +1,5 @@
 # Pull the previous results from the google bucket then generate new test reports
-# NOTE - we're nuking whats in the bucket after we copy it (to clean old kruft before we uplaod again later)
+# NOTE - we're nuking whats in the bucket after we copy it (to clean old kruft before we upload again later)
 # longer term, we probably want something a bit less drastic (or a backup at least).
 ./generate_results.sh
 
