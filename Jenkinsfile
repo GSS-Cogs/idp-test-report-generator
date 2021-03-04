@@ -1,9 +1,9 @@
 pipeline {
-    agent { docker { image 'python:3.5.1' } }
+    agent { docker { image 'gsscogs/allure-test-generator:latest' } }
     stages {
-        stage('build') {
+        stage('check dependencies') {
             steps {
-                sh 'python --version'
+                sh 'pip freeze'
             }
         }
     }
