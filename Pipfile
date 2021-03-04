@@ -11,6 +11,7 @@ google-cloud-storage = "*"
 allure-behave = "*"
 pygithub = "*"
 requests = "*"
+pyyaml = "*"
 
 [requires]
 python_version = "3.8"
