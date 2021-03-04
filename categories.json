@@ -1,0 +1,12 @@
+[
+    {
+    "name": "No Matching Scraper",
+    "matchedStatuses": ["broken"],
+    "traceRegex": ".*NotImplementedError.*" 
+    },
+    {
+    "name": "Unsupported Page Type",
+    "matchedStatuses": ["broken"],
+    "messageRegex": ".*Aborting operation This page type is not supported.*" 
+    }
+]
