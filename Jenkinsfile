@@ -5,7 +5,7 @@ pipeline {
         GIT_TOKEN = credentials('GIT_TOKEN')
     }
     stages {
-        stage('check dependencies') {
+        stage('log out python packages') {
             steps {
                 sh 'pip freeze'
             }
