@@ -7,16 +7,20 @@ python3 ./download_from_bucket.py
 python3 ./build_dynamic_tests.py
 
 # run test, format output for allure
-behave -f allure_behave.formatter:AllureFormatter -o allure-results ./features
+behave -f allure_behave.formatter:AllureFormatter -o ./out/allure-results ./features
 
 # copy in our custom categories (in case we've changed them)
-cp ./categories.json ./allure-results/categories.json
+cp ./categories.json ./out/allure-results/categories.json
 
 # Turn the new reports into test results
-docker run -v $PWD:/workspace -w /workspace frankescobar/allure-docker-service /bin/bash -c "allure generate allure-results --clean"
+docker run -v $PWD:/workspace -w /workspace frankescobar/allure-docker-service /bin/bash -c "allure generate ./out/allure-results --clean"
+
+# Move the new report to the /out directory
+cp -a ./allure-report/. ./out/allure-report/
+rm -rf ./allure-report
 
 # Update history with previous report stuff, so we can track trends
-cp -r $PWD/allure-report/history/. $PWD/allure-results/history
+cp -r $PWD/out/allure-report/history/. $PWD/out/allure-results/history
 
 # Write everything back to the google bucket
 python3 ./upload_to_bucket.py

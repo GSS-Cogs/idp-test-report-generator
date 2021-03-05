@@ -5,11 +5,8 @@ from pathlib import Path
 from google.cloud import storage
 
 # Rmove left overs from last run
-if os.path.isdir("allure-results"):
-    shutil.rmtree("allure-results")
-
-if os.path.isdir("allure-report"):  
-    shutil.rmtree("allure-report")
+if os.path.isdir("out"):
+    shutil.rmtree("out")
 
 BUCKET_NAME = os.environ["REPORT_BUCKET_NAME"]
 
@@ -27,9 +24,13 @@ def get_client():
 storage_client = get_client()
 blobs = storage_client.list_blobs(BUCKET_NAME)
 
-os.mkdir("allure-results")
-os.mkdir("allure-report")
+result_path = Path("out/allure-results")
+result_path.mkdir(exist_ok=True, parents=True)
 
+result_path = Path("out/allure-report")
+result_path.mkdir(exist_ok=True, parents=True)
+
+os.chdir('./out')
 
 for blob in storage_client.list_blobs(BUCKET_NAME):
     if not blob.name.endswith("/"): # don't download empty directories

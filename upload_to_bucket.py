@@ -23,19 +23,23 @@ bucket = storage_client.get_bucket(BUCKET_NAME)
 
 
 result_files = []
-for root, dirs, files in os.walk("allure-results"):
+for root, dirs, files in os.walk("./out/allure-results"):
+    root = root[6:]
+    assert root.startswith("allure-results"), f'expectied to start with "allure-results/" but got {root}'
     for file in files:
         result_files.append(f'{root}/{file}')
 
 report_files = []
-for root, dirs, files in os.walk("allure-report"):
+for root, dirs, files in os.walk("./out/allure-report"):
+    root = root[6:]
+    assert root.startswith("allure-report"), f'expectied to start with "allure-report/" but got {root}'
     for file in files:
         report_files.append(f'{root}/{file}')
 
 for result_file in result_files:
     blob = bucket.blob(result_file)
-    blob.upload_from_filename(result_file)
+    blob.upload_from_filename(f'./out/{result_file}')
 
 for report_file in report_files:
     blob = bucket.blob(report_file)
-    blob.upload_from_filename(report_file)
+    blob.upload_from_filename(f'./out/{report_file}')
