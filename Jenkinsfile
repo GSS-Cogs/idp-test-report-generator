@@ -11,8 +11,10 @@ pipeline {
         }
         stage('pull data from bucket') {
             steps {
-                sh 'python3 ./download_from_bucket.py'
-            }
+                withCredentials([[$class: 'FileBinding', credentialsId:"report_storage_bucket", variable: 'GOOGLE_APPLICATION_CREDENTIALS']]) {
+                    sh('python3 ./download_from_bucket.py')
+                }
+             }
         }
     }
 }
