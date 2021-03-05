@@ -17,9 +17,14 @@ pipeline {
                 }
              }
         }
-        stage('create dynamic features') {
+        stage('dynamically create test features') {
             steps {
                 sh('python3 ./build_dynamic_tests.py')
+             }
+        }
+        stage('run test features with allure output formatter') {
+            steps {
+                sh('behave -f allure_behave.formatter:AllureFormatter -o allure-results ./features')
              }
         }
     }
