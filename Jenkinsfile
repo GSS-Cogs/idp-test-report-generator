@@ -16,7 +16,7 @@ pipeline {
                 }
              }
         }
-        stage('create and run features') {
+        stage('create dynamic features') {
             steps {
                 sh('python3 ./build_dynamic_tests.py')
              }
