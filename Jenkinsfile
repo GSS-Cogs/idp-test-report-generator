@@ -2,7 +2,7 @@ pipeline {
     agent { docker { image 'gsscogs/allure-test-generator:latest' } }
     environment {
         REPORT_BUCKET_NAME = "idp-test-report-store"
-        GIT_TOKEN = = credentials('GIT_TOKEN')
+        GIT_TOKEN = credentials('GIT_TOKEN')
     }
     stages {
         stage('check dependencies') {
