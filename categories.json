@@ -1,12 +1,17 @@
 [
     {
-    "name": "No Matching Scraper",
+    "name": "No Viable Scraper & No Temp Scraper Specified",
     "matchedStatuses": ["broken"],
-    "traceRegex": ".*NotImplementedError.*" 
+    "messageRegex": ".*and insufficient seed metadata.*" 
     },
     {
     "name": "Unsupported Page Type",
     "matchedStatuses": ["broken"],
     "messageRegex": ".*Aborting operation This page type is not supported.*" 
+    },
+    {
+    "name": "Ran but returned no distributions",
+    "matchedStatuses": ["broken"],
+    "messageRegex": ".*fault. The scrape does not appear to .*" 
     }
 ]
