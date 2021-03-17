@@ -49,9 +49,10 @@ def step_impl(context):
 
 @then('no functionality issues have been flagged by the users')
 def step_impl(context):
-    if SCRAPER_STATE_KEY in context.scrape.seed:
-        if context.scrape.seed[SCRAPER_STATE_KEY].strip() != "":
-            raise UserDefinedError(context.scrape.seed[SCRAPER_STATE_KEY])
+    state = context.scrape.seed.get(SCRAPER_STATE_KEY, None)
+    if state is not None:
+        if state.strip() != "" and state != "ok":
+            raise UserDefinedError(state)
 
 @then('the scraper contains at least one valid distribution')
 def step_impl(context):
