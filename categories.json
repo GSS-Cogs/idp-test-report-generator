@@ -10,8 +10,18 @@
     "messageRegex": ".*Aborting operation This page type is not supported.*" 
     },
     {
-    "name": "Ran but returned no distributions",
+    "name": "No Distributions Returned",
     "matchedStatuses": ["broken"],
     "messageRegex": ".*fault. The scrape does not appear to .*" 
+    },
+    {
+    "name": "Undeclared Provisional Scraper",
+    "matchedStatuses": ["broken"],
+    "messageRegex": ".*temp scraper is in use but has not being flagged .*"
+    },
+    {
+    "name": "User Defined Error",
+    "traceRegex": ".*UserDefinedError.*", 
+    "matchedStatuses": ["broken"]
     }
 ]

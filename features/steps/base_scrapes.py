@@ -8,6 +8,22 @@ from gssutils import Scraper
 
 from helpers import parse_scrape_to_json
 
+SCRAPER_STATE_KEY = "scraper_state"
+
+class ProvisionalScraperError(Exception):
+    """ Raised when we're using a temp scraper where a full scraper implementation may be required
+    """
+
+    def __init__(self, message):
+        self.message = message
+
+class UserDefinedError(Exception):
+    """ Raised when a DE has flagged the scraper has missing or inadequte functionality
+    """
+
+    def __init__(self, message):
+        self.message = message
+
 @given('we specify the url "{url}"')
 def step_impl(context, url):
     context.url = url
@@ -20,9 +36,22 @@ def step_impl(context, seed_path):
 def step_impl(context):
     context.scrape = Scraper(seed=context.seed_path)
 
-@then('when we scrape with thr url no exception is encountered')
+# A temp scraper is only ok (as-in is acceptable) if the scraper state key literally says so
+@then('a temporary scraper has been flagged as an acceptable solution')
+def step_impl(context):
+    if not context.scrape.seed.get(SCRAPER_STATE_KEY, None) == "ok":
+        raise ProvisionalScraperError("A temp scraper is in use but has not being flagged as appropriate." \
+            + " A flag must be added or a full scraper implemented to clear this exception")
+
+@then('when we scrape with the url no exception is encountered')
 def step_impl(context):
     context.scrape = Scraper(context.url)
+
+@then('no functionality issues have been flagged by the users')
+def step_impl(context):
+    if SCRAPER_STATE_KEY in context.scrape.seed:
+        if context.scrape.seed[SCRAPER_STATE_KEY].strip() != "":
+            raise UserDefinedError(context.scrape.seed[SCRAPER_STATE_KEY])
 
 @then('the scraper contains at least one valid distribution')
 def step_impl(context):

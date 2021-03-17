@@ -41,27 +41,31 @@ def build_test_with_seed(info_json_path, dataset, is_temp=False):
     """
     mod_text = "Temp " if is_temp else ""
 
-    # Test content
+    # Test the scraper content is adequate
     if is_temp:
-        contents_check = ""
+        contents_check1 = "And a temporary scraper has been flagged as an acceptable solution"
+        contents_check2 = ""
     else:
-        contents_check = "And the scraper contains at least one valid distribution"
+        contents_check1 = "And the scraper contains at least one valid distribution"
+        contents_check2 = "And no functionality issues have been flagged by the users"
+
     return f"""
   Scenario: {mod_text}Scraper for {dataset}
     Given we use the seed "{info_json_path}"
     Then when we scrape with the seed no exception is encountered
-    {contents_check}
+    {contents_check1}
+    {contents_check2}
     """
 
 def build_test_with_url(url, dataset, is_temp=False):
     """
-    Create a scenario for using a scraper from a seed
+    Create a scenario for using a scraper from a simple url
     """
     mod_text = "Temp " if is_temp else ""
     return f"""
   Scenario: {mod_text}Scraper for {dataset}
     Given we specify the url "{url}"
-    Then when we scrape with thr url no exception is encountered 
+    Then when we scrape with the url no exception is encountered 
     """
 
 g = git_if_needed()
