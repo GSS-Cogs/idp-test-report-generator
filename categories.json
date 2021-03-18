@@ -23,5 +23,10 @@
     "name": "User Defined Error",
     "traceRegex": ".*UserDefinedError.*", 
     "matchedStatuses": ["broken"]
+    },
+    {
+    "name": "Pipeline Not Correctly Configured",
+    "messageRegex": ".*cannot be tested, something in the config.*", 
+    "matchedStatuses": ["broken"]
     }
 ]

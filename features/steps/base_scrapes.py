@@ -24,6 +24,22 @@ class UserDefinedError(Exception):
     def __init__(self, message):
         self.message = message
 
+class MalformedPipelineError(Exception):
+    """ Raised when we're unable to acquire the expected json resources at the stated places
+    """
+
+    def __init__(self, message):
+        self.message = message
+
+@given('we know "{failing_dataset}" is broke')
+def step_impl(context, failing_dataset):
+    context.malformed_pipeline = failing_dataset
+
+@then('bubble up an exception')
+def step_impl(context):
+    raise MalformedPipelineError(f'The pipeline {context.malformed_pipeline} cannot be tested, something in the config' \
+        + ' and/or json files is wrong')
+
 @given('we specify the url "{url}"')
 def step_impl(context, url):
     context.url = url

@@ -24,8 +24,12 @@ def git_if_needed() -> Github():
 
 def info_as_dict(url):
     r = requests.get(url)
-    if r.status_code != 200:
+    if r.status_code != 200 and r.status_code != 404:
         raise Exception(f'Faile to get {url} with status code {r.status_code}')
+
+    if r.status_code == 404:
+        print(f'got a 404 for {url}')
+        return None
 
     try:
         info_dict = r.json()
@@ -34,6 +38,16 @@ def info_as_dict(url):
 
     return info_dict
 
+
+def build_failing_test_for_malformed_pipeline(failing_dataset):
+    """
+    Create simple fail scenarios for visibility
+    """
+    return f"""
+  Scenario: The pipeline for {failing_dataset} is broken
+    Given we know "{failing_dataset}" is broke
+    Then bubble up an exception
+    """
 
 def build_test_with_seed(info_json_path, dataset, is_temp=False):
     """
@@ -51,8 +65,8 @@ def build_test_with_seed(info_json_path, dataset, is_temp=False):
   Scenario: {mod_text}Scraper for {dataset}
     Given we use the seed "{info_json_path}"
     Then when we scrape with the seed no exception is encountered
-    {contents_check1}
     And no functionality issues have been flagged by the users
+    {contents_check1}
     """
 
 def build_test_with_url(url, dataset, is_temp=False):
@@ -75,6 +89,16 @@ with open("./config.yaml") as f:
 
 seed_path = Path("out/seeds")
 seed_path.mkdir(exist_ok=True, parents=True)
+
+# Scrapers we are unable to test for whatever reason (typically, the Jenkins job/info.json is malformed)
+# Note: this is a bit hacky, but we're gonna creata a feature of tests that always
+# fail, so an appropriate exception per malformed pipeline bubbles up and can be categorised for the dashboard
+with open(f"./features/malformed.feature", 'w+') as f_base:
+    f_base.write(f"""Feature: Pipeline Not Correctly Configured
+As a data engineer.
+I want to know when the configuration for a pipeline is malformed.
+""".lstrip('\n'))
+
 
 for family in familes:
 
@@ -105,25 +129,39 @@ for family in familes:
     repo = g.get_repo(family)
     contents = repo.get_contents("datasets")
     for content_file in contents:
-        file_content = contents.pop(0)
 
-        if 'Jenkinsfile' in content_file.path:
+        if content_file.path != 'datasets/info.json':
             continue
-            
-        if file_content.type == "dir" and "." not in content_file.path and 'Makefile' not in content_file.path:
 
-            info_url = f'https://raw.githubusercontent.com/{family}/master/{content_file.path}/info.json'
+        root_info_json_url = f'https://raw.githubusercontent.com/{family}/master/{content_file.path}'
+        r = requests.get(root_info_json_url)
+        if r.status_code != 200:
+            raise Exception(f'Unable to get root info json from {root_info_json_url}')
+
+        root_info_as_dict = r.json()
+
+        with open(f"./{family.split('/')[1]}.json", "w") as f:
+            json.dump(root_info_as_dict, f, indent=2)
+
+        for pipeline in root_info_as_dict["pipelines"]:
+            
+            info_url = f'https://raw.githubusercontent.com/{family}/master/datasets/{pipeline}/info.json'
             info_dict = info_as_dict(info_url)
 
-            info_dict_path = f"./out/seeds/{content_file.path.split('/')[1]}_info.json"
-                
-            with open(info_dict_path, 'w') as f:
-                json.dump(info_dict, f, indent=2)
+            if info_dict is None: # denotes a 404
+                scenario = build_failing_test_for_malformed_pipeline(pipeline)
+                with open(f"./features/malformed.feature", 'a') as f_malformed:
+                    f_malformed.write(scenario)
+                continue
 
+            info_dict_path = f"./out/seeds/{pipeline}_info.json"
+            with open(info_dict_path, "w") as f:
+                json.dump(info_dict, f, indent=2)
+                
             # Multiple landingPage urls specified
-            if isinstance(info_dict["landingPage"], list):
+            if isinstance(info_dict.get("landingPage", None), list):
                 for i, url in enumerate(info_dict["landingPage"]):
-                    scenario = build_test_with_url(url, f'{content_file.path.split("/")[1]}_{i}', is_temp="dataURL" in info_dict.keys())
+                    scenario = build_test_with_url(url, f'{pipeline}_{i}', is_temp="dataURL" in info_dict.keys())
                     with open(f"./features/{family.split('/')[1]}-multi-url-scrapers.feature", 'a') as f_multi:
                         f_multi.write("\n")
                         f_multi.write(scenario)
@@ -132,11 +170,11 @@ for family in familes:
             else:
                 if "dataURL" in info_dict.keys():
                     with open(f"./features/{family.split('/')[1]}-temp-scrapers.feature", 'a') as f_temp:
-                        scenario = build_test_with_seed(info_dict_path, content_file.path.split('/')[1], is_temp=True)
+                        scenario = build_test_with_seed(info_dict_path, pipeline, is_temp=True)
                         f_temp.write("\n")
                         f_temp.write(scenario)
                 else:
                     with open(f"./features/{family.split('/')[1]}-standard-scrapers.feature", 'a') as f_base:
-                        scenario = build_test_with_seed(info_dict_path, content_file.path.split('/')[1], is_temp=False)
+                        scenario = build_test_with_seed(info_dict_path, pipeline, is_temp=False)
                         f_base.write("\n")
                         f_base.write(scenario)
