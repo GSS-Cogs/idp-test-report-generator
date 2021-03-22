@@ -49,6 +49,18 @@ def build_failing_test_for_malformed_pipeline(failing_dataset):
     Then bubble up an exception
     """
 
+
+def build_test_for_odata_api_scraper(info_json_path, dataset, is_temp=False):
+    """
+    Simple passing scanrio for odata scrapers
+    NOTE: bit beyond our scope here to tests these
+    """
+    return f"""
+  Scenario: Pipeline 
+    Given we know "{dataset}" is an odata api scraper
+    Then pass trivially
+    """
+
 def build_test_with_seed(info_json_path, dataset, is_temp=False):
     """
     Create a scenario for using a scraper from a seed
@@ -126,6 +138,13 @@ for family in familes:
     I want to know each multi url scraper completes without error with our chosen urls
     """.lstrip('\n'))
 
+    # Odata api scrapers
+    with open(f"./features/{family.split('/')[1]}-odata-api-scrapers.feature", 'w+') as f_odata_api:
+        f_odata_api.write(f"""Feature: {family.split('/')[1]} - Multi-URI Scrapers
+    As a data engineer.
+    I want to know that what odata api scrapers are in use by our pipelines.
+    """.lstrip('\n'))
+
     repo = g.get_repo(family)
     contents = repo.get_contents("datasets")
     for content_file in contents:
@@ -168,11 +187,18 @@ for family in familes:
 
             # Single landing page specified
             else:
-                if "dataURL" in info_dict.keys():
-                    with open(f"./features/{family.split('/')[1]}-temp-scrapers.feature", 'a') as f_temp:
-                        scenario = build_test_with_seed(info_dict_path, pipeline, is_temp=True)
-                        f_temp.write("\n")
-                        f_temp.write(scenario)
+                if "dataURL" in info_dict:
+
+                    if "odataConversion" in info_dict:
+                        with open(f"./features/{family.split('/')[1]}-temp-scrapers.feature", 'a') as f_odata_api:
+                            scenario = build_test_for_odata_api_scraper(info_dict_path, pipeline, is_temp=True)
+                            f_odata_api.write("\n")
+                            f_odata_api.write(scenario)
+                    else:
+                        with open(f"./features/{family.split('/')[1]}-temp-scrapers.feature", 'a') as f_temp:
+                            scenario = build_test_with_seed(info_dict_path, pipeline, is_temp=True)
+                            f_temp.write("\n")
+                            f_temp.write(scenario)
                 else:
                     with open(f"./features/{family.split('/')[1]}-standard-scrapers.feature", 'a') as f_base:
                         scenario = build_test_with_seed(info_dict_path, pipeline, is_temp=False)

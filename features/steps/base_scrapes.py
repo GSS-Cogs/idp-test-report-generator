@@ -1,6 +1,7 @@
 
 import json
 import logging
+import time
 
 from behave import *
 from allure_behave.hooks import allure_report
@@ -51,6 +52,15 @@ def step_impl(context, seed_path):
 @then('when we scrape with the seed no exception is encountered')
 def step_impl(context):
     context.scrape = Scraper(seed=context.seed_path)
+    time.sleep(5)
+
+@given('we know "{odata_api_scraper}" is an odata api scraper')
+def step_impl(context, odata_api_scraper):
+    context.odata_api_scraper = odata_api_scraper
+
+@then('pass trivially')
+def step_impl(context):
+    pass
 
 # A temp scraper is only ok (as-in is acceptable) if the scraper state key literally says so
 @then('a temporary scraper has been flagged as an acceptable solution')
