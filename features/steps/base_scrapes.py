@@ -2,6 +2,7 @@
 import json
 import logging
 import time
+import yaml
 
 from behave import *
 from allure_behave.hooks import allure_report
@@ -9,7 +10,9 @@ from gssutils import Scraper
 
 from helpers import parse_scrape_to_json
 
-SCRAPER_STATE_KEY = "scraper_state"
+# laod config once, save us some overhead
+with open("config.yaml") as f:
+    CONFIG_DICT = yaml.load(f, Loader=yaml.FullLoader)
 
 class ProvisionalScraperError(Exception):
     """ Raised when we're using a temp scraper where a full scraper implementation may be required
@@ -25,6 +28,13 @@ class UserDefinedError(Exception):
     def __init__(self, message):
         self.message = message
 
+class KnownEdgeCaseError(Exception):
+    """ Raised when a a scraper has a known edge case associated with it
+    """
+
+    def __init__(self, message):
+        self.message = message
+
 class MalformedPipelineError(Exception):
     """ Raised when we're unable to acquire the expected json resources at the stated places
     """
@@ -35,6 +45,10 @@ class MalformedPipelineError(Exception):
 @given('we know "{failing_dataset}" is broke')
 def step_impl(context, failing_dataset):
     context.malformed_pipeline = failing_dataset
+
+@then('bubble up the edge case message "{edgecase_text}"')
+def step_omp(context, edgecase_text):
+    raise KnownEdgeCaseError(f'This is a known issue: {edgecase_text}') 
 
 @then('bubble up an exception')
 def step_impl(context):
@@ -63,9 +77,9 @@ def step_impl(context):
     pass
 
 # A temp scraper is only ok (as-in is acceptable) if the scraper state key literally says so
-@then('a temporary scraper has been flagged as an acceptable solution')
-def step_impl(context):
-    if not context.scrape.seed.get(SCRAPER_STATE_KEY, None) == "ok":
+@then('a temporary scraper for "{dataset}" has been flagged as an acceptable solution')
+def step_impl(context, dataset):
+    if dataset not in CONFIG_DICT["acceptable_temp_scrapers"]:
         raise ProvisionalScraperError("A temp scraper is in use but has not being flagged as appropriate." \
             + " A flag must be added or a full scraper implemented to clear this exception")
 
@@ -73,12 +87,11 @@ def step_impl(context):
 def step_impl(context):
     context.scrape = Scraper(context.url)
 
-@then('no functionality issues have been flagged by the users')
-def step_impl(context):
-    state = context.scrape.seed.get(SCRAPER_STATE_KEY, None)
-    if state is not None:
-        if state.strip() != "" and state != "ok":
-            raise UserDefinedError(state)
+@then('no functionality issues for "{dataset}" have been flagged by the users')
+def step_impl(context, dataset):
+    if dataset in CONFIG_DICT["known_gssutils_issues"]:
+        raise UserDefinedError(f'Known gssutils issue: "{CONFIG_DICT["known_gssutils_issues"][dataset]}". \n'
+            'When said issue has been resolved please update config.yaml to reflect this.')
 
 @then('the scraper contains at least one valid distribution')
 def step_impl(context):

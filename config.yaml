@@ -1,5 +1,24 @@
+
+# the dataset families we are monitoring
 families:
   - 'GSS-Cogs/family-edvp'
   - 'GSS-Cogs/family-trade'
   - 'GSS-Cogs/family-homelessness'
   - 'GSS-Cogs/family-towns-and-high-streets'
+
+# list of where we've declared a temp scraper and are happy with it just being a temp scraper
+acceptable_temp_scrapers:
+  - Ofgem-Cheapest-tariffs-by-payment-method-Typical-domestic-dual-fuel-customer-GB
+  - Ofgem-Retail-price-comparison-by-company-and-tariff-type-Domestic-GB
+  - Ofgem-Warm-Home-Discount-scheme
+
+# git issues, keep track of where a scraper is broken due to an as yet unresoved issue in gssutils
+# note - link the issue in question please
+known_gssutils_issues:
+  SG-Housing-Options-PREVENT1-Statistics-in-Scotland: https://github.com/GSS-Cogs/gss-utils/issues/197
+
+# edge cases, things we can't resolve right now but want to keep an eye on
+known_issues:
+  NHS-D-Patients-Registered-at-a-GP-Practice: Scraper works but test fails due to picking up a pre-release page we filter out in the transform
+  ONS-Business-Register-and-Employment-Survey-BRES: Pipeline is on hold as BAs are waiting better data source 
+  ONS-employment-estimates-for-towns-for-2019: Not actually a scraper, all files are being pulled directly from google drive

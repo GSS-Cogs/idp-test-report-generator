@@ -28,5 +28,10 @@
     "name": "Pipeline Not Correctly Configured",
     "messageRegex": ".*cannot be tested, something in the config.*", 
     "matchedStatuses": ["broken"]
+    },
+    {
+    "name": "Known Issue",
+    "messageRegex": ".* is a known issue: .*",
+    "matchedStatuses": ["broken"]
     }
 ]

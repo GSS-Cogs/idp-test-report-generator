@@ -39,12 +39,22 @@ def info_as_dict(url):
     return info_dict
 
 
+def build_failing_test_for_known_edge_case(failing_dataset, edgecase_text):
+    """
+    Create simple fail scenarios for visibility
+    """
+    return f"""
+  Scenario: Scraper for {failing_dataset}
+    Given we know "{failing_dataset}" is broke
+    Then bubble up the edge case message "{edgecase_text}"
+    """
+
 def build_failing_test_for_malformed_pipeline(failing_dataset):
     """
     Create simple fail scenarios for visibility
     """
     return f"""
-  Scenario: The pipeline for {failing_dataset} is broken
+  Scenario: Scraper for {failing_dataset}
     Given we know "{failing_dataset}" is broke
     Then bubble up an exception
     """
@@ -56,7 +66,7 @@ def build_test_for_odata_api_scraper(info_json_path, dataset, is_temp=False):
     NOTE: bit beyond our scope here to tests these
     """
     return f"""
-  Scenario: Pipeline 
+  Scenario: Scraper for {dataset}
     Given we know "{dataset}" is an odata api scraper
     Then pass trivially
     """
@@ -65,19 +75,18 @@ def build_test_with_seed(info_json_path, dataset, is_temp=False):
     """
     Create a scenario for using a scraper from a seed
     """
-    mod_text = "Temp " if is_temp else ""
 
     # Test the scraper content is adequate
     if is_temp:
-        contents_check1 = "And a temporary scraper has been flagged as an acceptable solution"
+        contents_check1 = f'And a temporary scraper for "{dataset}" has been flagged as an acceptable solution'
     else:
         contents_check1 = "And the scraper contains at least one valid distribution"
 
     return f"""
-  Scenario: {mod_text}Scraper for {dataset}
+  Scenario: Scraper for {dataset}
     Given we use the seed "{info_json_path}"
     Then when we scrape with the seed no exception is encountered
-    And no functionality issues have been flagged by the users
+    And no functionality issues for "{dataset}" have been flagged by the users
     {contents_check1}
     """
 
@@ -87,7 +96,7 @@ def build_test_with_url(url, dataset, is_temp=False):
     """
     mod_text = "Temp " if is_temp else ""
     return f"""
-  Scenario: {mod_text}Scraper for {dataset}
+  Scenario: Scraper for {dataset}
     Given we specify the url "{url}"
     Then when we scrape with the url no exception is encountered 
     """
@@ -98,51 +107,20 @@ g = git_if_needed()
 with open("./config.yaml") as f:
     config_dict = yaml.load(f, Loader=yaml.FullLoader)
     familes = config_dict["families"]
+    known_issues = config_dict["known_issues"]
 
 seed_path = Path("out/seeds")
 seed_path.mkdir(exist_ok=True, parents=True)
 
-# Scrapers we are unable to test for whatever reason (typically, the Jenkins job/info.json is malformed)
-# Note: this is a bit hacky, but we're gonna creata a feature of tests that always
-# fail, so an appropriate exception per malformed pipeline bubbles up and can be categorised for the dashboard
-with open(f"./features/malformed.feature", 'w+') as f_base:
-    f_base.write(f"""Feature: Pipeline Not Correctly Configured
-As a data engineer.
-I want to know when the configuration for a pipeline is malformed.
-""".lstrip('\n'))
-
-
 for family in familes:
 
+    feature_path = f"./features/{family.split('/')[1]}-scrapers.feature"
     # Base (i.e standard) scrapers
-    with open(f"./features/{family.split('/')[1]}-standard-scrapers.feature", 'w+') as f_base:
-        f_base.write(f"""Feature: {family.split('/')[1]} - Scrapers
+    with open(feature_path, 'w+') as f:
+        f.write(f"""Feature: {family.split('/')[1]} - Scrapers
     As a data engineer.
     I want to know that what base scrapers are in use by our pipelines.
     I want to know each base scraper completes without error with our chosen urls
-    """.lstrip('\n'))
-
-    # Temp scrapers
-    with open(f"./features/{family.split('/')[1]}-temp-scrapers.feature", 'w+') as f_temp:
-        f_temp.write(f"""Feature: {family.split('/')[1]} - Temp Scrapers
-    As a data engineer.
-    I want to know that what temp base scrapers are in use by our pipelines.
-    I want to know each temp scraper completes without error with our chosen urls
-    """.lstrip('\n'))
-
-    # Multi url scrapers
-    with open(f"./features/{family.split('/')[1]}-multi-url-scrapers.feature", 'w+') as f_multi:
-        f_multi.write(f"""Feature: {family.split('/')[1]} - Multi-URI Scrapers
-    As a data engineer.
-    I want to know that what multi url scrapers are in use by our pipelines.
-    I want to know each multi url scraper completes without error with our chosen urls
-    """.lstrip('\n'))
-
-    # Odata api scrapers
-    with open(f"./features/{family.split('/')[1]}-odata-api-scrapers.feature", 'w+') as f_odata_api:
-        f_odata_api.write(f"""Feature: {family.split('/')[1]} - Multi-URI Scrapers
-    As a data engineer.
-    I want to know that what odata api scrapers are in use by our pipelines.
     """.lstrip('\n'))
 
     repo = g.get_repo(family)
@@ -169,38 +147,45 @@ for family in familes:
 
             if info_dict is None: # denotes a 404
                 scenario = build_failing_test_for_malformed_pipeline(pipeline)
-                with open(f"./features/malformed.feature", 'a') as f_malformed:
-                    f_malformed.write(scenario)
+                with open(feature_path, 'a') as f:
+                    f.write(scenario)
                 continue
 
             info_dict_path = f"./out/seeds/{pipeline}_info.json"
             with open(info_dict_path, "w") as f:
                 json.dump(info_dict, f, indent=2)
-                
+
+            # If it's a known issue, catch with a suitable error
+            if pipeline in known_issues:
+                scenario = build_failing_test_for_known_edge_case(pipeline, known_issues[pipeline])
+                with open(feature_path, 'a') as f:
+                    f.write("\n")
+                    f.write(scenario)
+                    
             # Multiple landingPage urls specified
-            if isinstance(info_dict.get("landingPage", None), list):
+            elif isinstance(info_dict.get("landingPage", None), list):
                 for i, url in enumerate(info_dict["landingPage"]):
                     scenario = build_test_with_url(url, f'{pipeline}_{i}', is_temp="dataURL" in info_dict.keys())
-                    with open(f"./features/{family.split('/')[1]}-multi-url-scrapers.feature", 'a') as f_multi:
-                        f_multi.write("\n")
-                        f_multi.write(scenario)
+                    with open(feature_path, 'a') as f:
+                        f.write("\n")
+                        f.write(scenario)
 
             # Single landing page specified
             else:
                 if "dataURL" in info_dict:
 
                     if "odataConversion" in info_dict:
-                        with open(f"./features/{family.split('/')[1]}-temp-scrapers.feature", 'a') as f_odata_api:
+                        with open(feature_path, 'a') as f:
                             scenario = build_test_for_odata_api_scraper(info_dict_path, pipeline, is_temp=True)
-                            f_odata_api.write("\n")
-                            f_odata_api.write(scenario)
+                            f.write("\n")
+                            f.write(scenario)
                     else:
-                        with open(f"./features/{family.split('/')[1]}-temp-scrapers.feature", 'a') as f_temp:
+                        with open(feature_path, 'a') as f:
                             scenario = build_test_with_seed(info_dict_path, pipeline, is_temp=True)
-                            f_temp.write("\n")
-                            f_temp.write(scenario)
+                            f.write("\n")
+                            f.write(scenario)
                 else:
-                    with open(f"./features/{family.split('/')[1]}-standard-scrapers.feature", 'a') as f_base:
+                    with open(feature_path, 'a') as f:
                         scenario = build_test_with_seed(info_dict_path, pipeline, is_temp=False)
-                        f_base.write("\n")
-                        f_base.write(scenario)
+                        f.write("\n")
+                        f.write(scenario)
