@@ -116,8 +116,12 @@ def step_impl(context):
         try:
             assert len(context.scrape.distributions) > 0, err_msg
         except:
-            context.scrape.select_dataset(latest=True)
-            assert len(context.scrape.distributions) > 0, err_msg
+            found = False
+            for dataset in context.scraper.catalog.dataset:
+                if len(dataset.distribution) > 0:
+                    found = True
+            if not found:
+                raise err_msg
     except Exception as err:
         raise Exception(err_msg +'\n' + json.dumps(parse_scrape_to_json(context.scrape), indent=2)) from err
 
