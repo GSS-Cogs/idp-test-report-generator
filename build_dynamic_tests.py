@@ -22,10 +22,11 @@ def git_if_needed() -> Github():
     return g
 
 
-def info_as_dict(url):
+def info_as_dict(url: str) -> (str):
     r = requests.get(url)
+    
     if r.status_code != 200 and r.status_code != 404:
-        raise Exception(f'Faile to get {url} with status code {r.status_code}')
+        raise Exception(f'Failed to get {url} with status code {r.status_code}')
 
     if r.status_code == 404:
         print(f'got a 404 for {url}')
@@ -39,7 +40,7 @@ def info_as_dict(url):
     return info_dict
 
 
-def build_failing_test_for_known_edge_case(failing_dataset, edgecase_text):
+def build_failing_test_for_known_edge_case(failing_dataset: str, edgecase_text: str) -> (str):
     """
     Create simple fail scenarios for visibility
     """
@@ -49,7 +50,7 @@ def build_failing_test_for_known_edge_case(failing_dataset, edgecase_text):
     Then bubble up the edge case message "{edgecase_text}"
     """
 
-def build_failing_test_for_malformed_pipeline(failing_dataset):
+def build_failing_test_for_malformed_pipeline(failing_dataset: str) -> (str):
     """
     Create simple fail scenarios for visibility
     """
@@ -60,7 +61,8 @@ def build_failing_test_for_malformed_pipeline(failing_dataset):
     """
 
 
-def build_test_for_odata_api_scraper(info_json_path, dataset, is_temp=False):
+# TODO - not a path the is it?
+def build_test_for_odata_api_scraper(info_json_path :str, dataset: str, is_temp: bool = False) -> (str):
     """
     Simple passing scanrio for odata scrapers
     NOTE: bit beyond our scope here to tests these
@@ -71,7 +73,8 @@ def build_test_for_odata_api_scraper(info_json_path, dataset, is_temp=False):
     Then pass trivially
     """
 
-def build_test_with_seed(info_json_path, dataset, is_temp=False):
+# TODO - not a path the is it?
+def build_test_with_seed(info_json_path: str, dataset: str, is_temp: bool =False) -> (str):
     """
     Create a scenario for using a scraper from a seed
     """
@@ -90,7 +93,7 @@ def build_test_with_seed(info_json_path, dataset, is_temp=False):
     {contents_check1}
     """
 
-def build_test_with_url(url, dataset, is_temp=False):
+def build_test_with_url(url, dataset:str , is_temp: bool = False) -> (str):
     """
     Create a scenario for using a scraper from a simple url
     """

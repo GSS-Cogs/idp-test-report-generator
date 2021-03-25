@@ -1,6 +1,7 @@
-
-import json
+import backoff
 import logging
+import json
+import requests
 import time
 import yaml
 
@@ -10,7 +11,22 @@ from gssutils import Scraper
 
 from helpers import parse_scrape_to_json
 
-# laod config once, save us some overhead
+# Be a good citizen and avoid rinsing peoples apis 
+DELAY_BETWEEN_REQUESTS = 5 # seconds
+
+# exponentially backoff a scrape request if it hits a 429
+# shouldnt be necessary with a built in delay, but sadly it is...
+def fatal_code(e):
+    logging.warning(f'Backoff got response code {e.response.status_code}')
+    return e.response.status_code != 429
+
+# retry but backoff scrapes if we hit a 429
+@backoff.on_exception(backoff.expo, requests.exceptions.RequestException, max_time=300, giveup=fatal_code)
+def get_scrape(seed_path):
+    """Wrap the http get so we can use backoff"""
+    return Scraper(seed=seed_path)
+
+# load config once, save us some overhead
 with open("config.yaml") as f:
     CONFIG_DICT = yaml.load(f, Loader=yaml.FullLoader)
 
@@ -65,8 +81,8 @@ def step_impl(context, seed_path):
 
 @then('when we scrape with the seed no exception is encountered')
 def step_impl(context):
-    context.scrape = Scraper(seed=context.seed_path)
-    time.sleep(5)
+    context.scrape = get_scrape(context.seed_path)
+    time.sleep(DELAY_BETWEEN_REQUESTS)
 
 @given('we know "{odata_api_scraper}" is an odata api scraper')
 def step_impl(context, odata_api_scraper):

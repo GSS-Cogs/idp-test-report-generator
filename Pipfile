@@ -12,6 +12,7 @@ allure-behave = "*"
 pygithub = "*"
 requests = "*"
 pyyaml = "*"
+backoff = "*"
 
 [requires]
 python_version = "3.8"
