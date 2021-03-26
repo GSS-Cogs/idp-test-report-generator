@@ -117,7 +117,7 @@ def step_impl(context):
             assert len(context.scrape.distributions) > 0, err_msg
         except:
             found = False
-            for dataset in context.scraper.catalog.dataset:
+            for dataset in context.scrape.catalog.dataset:
                 if len(dataset.distribution) > 0:
                     found = True
             if not found:
