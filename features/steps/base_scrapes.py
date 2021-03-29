@@ -11,19 +11,25 @@ from gssutils import Scraper
 
 from helpers import parse_scrape_to_json
 
+def printlog(msg):
+    # Do both, as we want to make sure this bubbles up in the Jenkins console
+    logging.warning(msg)
+    print(msg)
+
 # Be a good citizen and avoid rinsing peoples apis 
-DELAY_BETWEEN_REQUESTS = 5 # seconds
+DELAY_BETWEEN_REQUESTS = 10 # seconds
 
 # exponentially backoff a scrape request if it hits a 429
 # shouldnt be necessary with a built in delay, but sadly it is...
 def fatal_code(e):
-    logging.warning(f'Backoff got response code {e.response.status_code}')
+    printlog(f'Backoff used, got response code {e.response.status_code}')
     return e.response.status_code != 429
 
 # retry but backoff scrapes if we hit a 429
-@backoff.on_exception(backoff.expo, requests.exceptions.RequestException, max_time=300, giveup=fatal_code)
+@backoff.on_exception(backoff.expo, requests.exceptions.RequestException, max_time=600, giveup=fatal_code)
 def get_scrape(seed_path):
     """Wrap the http get so we can use backoff"""
+    printlog(f'Attempting scrape for seed {seed_path}')
     return Scraper(seed=seed_path)
 
 # load config once, save us some overhead
@@ -81,8 +87,9 @@ def step_impl(context, seed_path):
 
 @then('when we scrape with the seed no exception is encountered')
 def step_impl(context):
-    context.scrape = get_scrape(context.seed_path)
+    printlog(f'Sleeping for {DELAY_BETWEEN_REQUESTS} seconds')
     time.sleep(DELAY_BETWEEN_REQUESTS)
+    context.scrape = get_scrape(context.seed_path)
 
 @given('we know "{odata_api_scraper}" is an odata api scraper')
 def step_impl(context, odata_api_scraper):
