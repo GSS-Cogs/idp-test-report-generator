@@ -1,7 +1,7 @@
 
+from datetime import datetime
 import os
-from os import listdir
-from os.path import isfile, join
+import zipfile
 
 from google.cloud import storage
 
@@ -18,28 +18,35 @@ def get_client():
         
     return storage_client
 
-storage_client = get_client()
-bucket = storage_client.get_bucket(BUCKET_NAME)
-
-
-result_files = []
+all_the_files = []
 for root, dirs, files in os.walk("./out/allure-results"):
     root = root[6:]
     assert root.startswith("allure-results"), f'expectied to start with "allure-results/" but got {root}'
     for file in files:
-        result_files.append(f'{root}/{file}')
+        all_the_files.append(f'./out/{root}/{file}')
 
-report_files = []
 for root, dirs, files in os.walk("./out/allure-report"):
     root = root[6:]
     assert root.startswith("allure-report"), f'expectied to start with "allure-report/" but got {root}'
     for file in files:
-        report_files.append(f'{root}/{file}')
+        all_the_files.append(f'./out/{root}/{file}')
 
-for result_file in result_files:
-    blob = bucket.blob(result_file)
-    blob.upload_from_filename(f'./out/{result_file}')
+def zipdir(path, ziph):
+    for root, dirs, files in os.walk(path):
+        if root == "./out/seeds":
+            continue
+        for file in files:
+            ziph.write(os.path.join(root, file), 
+                       os.path.relpath(os.path.join(root, file), 
+                                       os.path.join(path, '..')))
 
-for report_file in report_files:
-    blob = bucket.blob(report_file)
-    blob.upload_from_filename(f'./out/{report_file}')
+output_name = datetime.now().isoformat()
+zipf = zipfile.ZipFile(f'{output_name}.zip', 'w', zipfile.ZIP_DEFLATED)
+zipdir('./out', zipf)
+zipf.close()   
+
+storage_client = get_client()
+bucket = storage_client.get_bucket(BUCKET_NAME)
+
+blob = bucket.blob(f'{output_name}.zip')
+blob.upload_from_filename(f'{output_name}.zip')
