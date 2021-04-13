@@ -1,5 +1,7 @@
-import os 
+import os
+from pathlib import Path
 import shutil
+from zipfile import ZipFile
 
 from pathlib import Path
 from google.cloud import storage
@@ -22,25 +24,14 @@ def get_client():
     return storage_client
 
 storage_client = get_client()
-blobs = storage_client.list_blobs(BUCKET_NAME)
 
-result_path = Path("out/allure-results")
-result_path.mkdir(exist_ok=True, parents=True)
+Path('./tmp').mkdir(exist_ok=True)
 
-result_path = Path("out/allure-report")
-result_path.mkdir(exist_ok=True, parents=True)
+blobs = list(storage_client.list_blobs(BUCKET_NAME))
+latest_created_time = min([x.time_created for x in blobs])
+latest_data_blob = [x for x in blobs if x.time_created == latest_created_time][0]
+this_data_path = f'./tmp/{latest_data_blob.name}'
+latest_data_blob.download_to_filename(this_data_path)
 
-os.chdir('./out')
-
-for blob in storage_client.list_blobs(BUCKET_NAME):
-    if not blob.name.endswith("/"): # don't download empty directories
-        if "/" in blob.name:
-            needs_path = "/".join(str(blob.name).split("/")[:-1])
-            this_path = Path(needs_path)
-            this_path.mkdir(exist_ok=True, parents=True)
-        blob.download_to_filename(blob.name)
-
-bucket = storage_client.bucket(BUCKET_NAME)
-for blob in storage_client.list_blobs(BUCKET_NAME):
-    blob_to_go = bucket.blob(blob.name)
-    blob_to_go.delete()
+with ZipFile(this_data_path, 'r') as zipObj:
+   zipObj.extractall()

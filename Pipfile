@@ -6,7 +6,7 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-gssutils = {git = "https://github.com/GSS-Cogs/gss-utils.git", ref = "v0.12.9"}
+gssutils = {git = "https://github.com/GSS-Cogs/gss-utils.git", ref = "v0.12.10"}
 google-cloud-storage = "*"
 allure-behave = "*"
 pygithub = "*"
