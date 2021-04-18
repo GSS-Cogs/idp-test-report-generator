@@ -5,7 +5,7 @@ import zipfile
 
 from google.cloud import storage
 
-BUCKET_NAME = os.environ["REPORT_BUCKET_NAME"]
+BUCKET_NAME = 'idp-test-report-store'
 
 def get_client():
     """
