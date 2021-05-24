@@ -5,6 +5,7 @@ families:
   - 'GSS-Cogs/family-trade'
   - 'GSS-Cogs/family-homelessness'
   - 'GSS-Cogs/family-towns-and-high-streets'
+  - 'GSS-Cogs/family-climate-change'
 
 # Rationale for acepted temp scrapers:
 # ------------------------------------
@@ -18,8 +19,8 @@ acceptable_temp_scrapers:
 
 # git issues, keep track of where a scraper is broken due to an as yet unresoved issue in gssutils
 # note - link the issue in question please
-known_gssutils_issues:
-  SG-Housing-Options-PREVENT1-Statistics-in-Scotland: https://github.com/GSS-Cogs/gss-utils/issues/197
+# known_gssutils_issues:
+#     SG-Housing-Options-PREVENT1-Statistics-in-Scotland: https://github.com/GSS-Cogs/gss-utils/issues/197
 
 # edge cases, things we can't resolve right now but want to keep an eye on
 known_issues:
