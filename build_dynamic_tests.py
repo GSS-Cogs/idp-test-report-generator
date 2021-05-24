@@ -110,7 +110,7 @@ g = git_if_needed()
 with open("./config.yaml") as f:
     config_dict = yaml.load(f, Loader=yaml.FullLoader)
     familes = config_dict["families"]
-    known_issues = config_dict["known_issues"]
+    known_issues = config_dict.get("known_issues". {})
 
 seed_path = Path("out/seeds")
 seed_path.mkdir(exist_ok=True, parents=True)
