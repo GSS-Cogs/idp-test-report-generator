@@ -112,9 +112,10 @@ def step_impl(context):
 
 @then('no functionality issues for "{dataset}" have been flagged by the users')
 def step_impl(context, dataset):
-    if dataset in CONFIG_DICT["known_gssutils_issues"]:
-        raise UserDefinedError(f'Known gssutils issue: "{CONFIG_DICT["known_gssutils_issues"][dataset]}". \n'
-            'When said issue has been resolved please update config.yaml to reflect this.')
+    if CONFIG_DICT.get("known_gssutils_issues", None):
+        if dataset in CONFIG_DICT.get("known_gssutils_issues"):
+            raise UserDefinedError(f'Known gssutils issue: "{CONFIG_DICT["known_gssutils_issues"][dataset]}". \n'
+                'When said issue has been resolved please update config.yaml to reflect this.')
 
 @then('the scraper contains at least one valid distribution')
 def step_impl(context):
